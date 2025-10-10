@@ -4,61 +4,57 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.function.Function;
 
 @Component
 public class JwtUtil {
 
-    // ✅ Безопасный ключ, сгенерированный автоматически (длина >= 256 бит)
-    private static final SecretKey SECRET_KEY = Keys.secretKeyFor(SignatureAlgorithm.HS256);
+    @Value("${jwt.secret}")
+    private String secret;
 
-    // Время жизни токена — 10 часов
-    private static final long EXPIRATION_TIME = 1000 * 60 * 60 * 10;
+    @Value("${jwt.expiration}")
+    private long expirationTime;
 
-    // ✅ Генерация JWT
+    private SecretKey getSigningKey() {
+        // Use hmacShaKeyFor — requires secret >= 32 bytes (>= 256 bits)
+        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    }
+
     public String generateToken(String username) {
         return Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(new Date())
-                .setExpiration(new Date(System.currentTimeMillis() + EXPIRATION_TIME))
-                .signWith(SECRET_KEY)
+                .setExpiration(new Date(System.currentTimeMillis() + expirationTime))
+                .signWith(getSigningKey(), SignatureAlgorithm.HS256)
                 .compact();
     }
 
-    // ✅ Извлечение имени пользователя из токена
     public String extractUsername(String token) {
         return extractClaim(token, Claims::getSubject);
     }
 
-    // ✅ Проверка валидности токена
     public boolean validateToken(String token, String username) {
-        final String extractedUsername = extractUsername(token);
-        return (extractedUsername.equals(username) && !isTokenExpired(token));
+        final String extracted = extractUsername(token);
+        return (extracted != null && extracted.equals(username) && !isTokenExpired(token));
     }
 
-    // Проверка истечения токена
     private boolean isTokenExpired(String token) {
-        return extractExpiration(token).before(new Date());
-    }
-
-    private Date extractExpiration(String token) {
-        return extractClaim(token, Claims::getExpiration);
+        Date exp = extractClaim(token, Claims::getExpiration);
+        return exp.before(new Date());
     }
 
     private <T> T extractClaim(String token, Function<Claims, T> claimsResolver) {
-        final Claims claims = extractAllClaims(token);
-        return claimsResolver.apply(claims);
-    }
-
-    private Claims extractAllClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(SECRET_KEY)
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(getSigningKey())
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
+        return claimsResolver.apply(claims);
     }
 }

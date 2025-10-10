@@ -1,42 +1,40 @@
 package com.example.smarthomecatalog.model;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.util.List;
 
 @Entity
+@Table(name = "devices")
 public class Device {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name;
     private String type;
-    private double price;
-    private LocalDate addedDate;
-    @Column(length = 1000)
+    private Double price;
+
+    @Column(columnDefinition = "text")
     private String description;
+
+    private Double rating;
+
+    @ElementCollection
+    @CollectionTable(name = "device_tags", joinColumns = @JoinColumn(name = "device_id"))
+    @Column(name = "tag")
+    private List<String> tags;
+
+    private String imageUrl;
+
+    private Boolean isPublic = true; // true = visible to everyone, false = only author
+
     @ManyToOne
     @JoinColumn(name = "author_id")
     private User author;
-    public User getAuthor() {
-        return author;
-    }
 
-    public void setAuthor(User author) {
-        this.author = author;
-    }
     public Device() {}
 
-    public Device(String name, String type, double price, LocalDate addedDate, String description) {
-        this.name = name;
-        this.type = type;
-        this.price = price;
-        this.addedDate = addedDate;
-        this.description = description;
-    }
-
-    // Геттеры и сеттеры
+    // getters / setters (generate all)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -46,12 +44,24 @@ public class Device {
     public String getType() { return type; }
     public void setType(String type) { this.type = type; }
 
-    public double getPrice() { return price; }
-    public void setPrice(double price) { this.price = price; }
-
-    public LocalDate getAddedDate() { return addedDate; }
-    public void setAddedDate(LocalDate addedDate) { this.addedDate = addedDate; }
+    public Double getPrice() { return price; }
+    public void setPrice(Double price) { this.price = price; }
 
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
+
+    public Double getRating() { return rating; }
+    public void setRating(Double rating) { this.rating = rating; }
+
+    public List<String> getTags() { return tags; }
+    public void setTags(List<String> tags) { this.tags = tags; }
+
+    public String getImageUrl() { return imageUrl; }
+    public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public Boolean getIsPublic() { return isPublic; }
+    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
+
+    public User getAuthor() { return author; }
+    public void setAuthor(User author) { this.author = author; }
 }

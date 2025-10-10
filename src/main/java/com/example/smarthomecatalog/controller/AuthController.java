@@ -4,49 +4,54 @@ import com.example.smarthomecatalog.model.User;
 import com.example.smarthomecatalog.repository.UserRepository;
 import com.example.smarthomecatalog.security.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.*;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
 
 @RestController
 @RequestMapping("/api")
 public class AuthController {
 
     @Autowired
-    private AuthenticationManager authenticationManager;
-    @Autowired
-    private JwtUtil jwtUtil;
-    @Autowired
     private UserRepository userRepository;
     @Autowired
     private PasswordEncoder passwordEncoder;
+    @Autowired
+    private AuthenticationManager authenticationManager;
+    @Autowired
+    private JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public Map<String, String> register(@RequestBody User user) {
+    public ResponseEntity<?> register(@RequestBody User user) {
+        if (userRepository.findByUsername(user.getUsername()).isPresent()) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Username exists"));
+        }
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "User registered successfully");
-        return response;
+        return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }
 
     @PostMapping("/login")
-    public Map<String, String> login(@RequestBody User user) {
-        Authentication auth = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
-        );
+    public ResponseEntity<?> login(@RequestBody User user) {
+        try {
+            Authentication auth = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword())
+            );
+        } catch (BadCredentialsException ex) {
+            return ResponseEntity.status(401).body(Map.of("message", "Invalid credentials"));
+        }
+        String token = jwtUtil.generateToken(user.getUsername());
+        return ResponseEntity.ok(Map.of("token", token));
+    }
 
-        UserDetails userDetails = (UserDetails) auth.getPrincipal();
-        String token = jwtUtil.generateToken(userDetails.getUsername());
-
-        Map<String, String> response = new HashMap<>();
-        response.put("token", token);
-        return response;
+    @GetMapping("/me")
+    public ResponseEntity<?> me(Authentication authentication) {
+        if (authentication == null) return ResponseEntity.status(401).body(Map.of("message", "Not authenticated"));
+        return ResponseEntity.ok(Map.of("username", authentication.getName()));
     }
 }
