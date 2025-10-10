@@ -16,7 +16,16 @@ public class Device {
     private LocalDate addedDate;
     @Column(length = 1000)
     private String description;
+    @ManyToOne
+    @JoinColumn(name = "author_id")
+    private User author;
+    public User getAuthor() {
+        return author;
+    }
 
+    public void setAuthor(User author) {
+        this.author = author;
+    }
     public Device() {}
 
     public Device(String name, String type, double price, LocalDate addedDate, String description) {

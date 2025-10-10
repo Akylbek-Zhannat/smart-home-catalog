@@ -23,3 +23,12 @@
 ## Примеры запросов
 
 ### Получить все устройства
+POST /register
+Body: { "username": "user1", "password": "1234" }
+
+POST /login
+Body: { "username": "user1", "password": "4321" }
+Response: { "token": "<JWT token>" }
+
+GET /me
+Headers: Authorization: Bearer <token>
