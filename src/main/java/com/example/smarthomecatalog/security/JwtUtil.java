@@ -22,7 +22,6 @@ public class JwtUtil {
     private long expirationTime;
 
     private SecretKey getSigningKey() {
-        // Use hmacShaKeyFor — requires secret >= 32 bytes (>= 256 bits)
         return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 

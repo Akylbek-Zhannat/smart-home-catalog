@@ -23,10 +23,12 @@ public class Device {
     @CollectionTable(name = "device_tags", joinColumns = @JoinColumn(name = "device_id"))
     @Column(name = "tag")
     private List<String> tags;
+    @Column(name = "created_at")
+    private java.time.LocalDateTime createdAt = java.time.LocalDateTime.now();
 
     private String imageUrl;
 
-    private Boolean isPublic = true; // true = visible to everyone, false = only author
+    private Boolean isPublic = true;
 
     @ManyToOne
     @JoinColumn(name = "author_id")
@@ -34,7 +36,6 @@ public class Device {
 
     public Device() {}
 
-    // getters / setters (generate all)
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 

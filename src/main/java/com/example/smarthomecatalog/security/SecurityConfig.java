@@ -24,11 +24,9 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
-                        // public endpoints
                         .requestMatchers("/api/register", "/api/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/devices/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
-                        // all other endpoints require auth
                         .anyRequest().authenticated()
                 )
                 .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS));

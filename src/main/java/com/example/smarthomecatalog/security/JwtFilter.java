@@ -22,7 +22,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private JwtUtil jwtUtil;
 
     @Autowired
-    private UserDetailsService userDetailsService; // должен быть бин
+    private UserDetailsService userDetailsService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -30,7 +30,6 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain) throws ServletException, IOException {
 
         String header = request.getHeader("Authorization");
-        // debug log (удали позже)
         System.out.println("JwtFilter triggered for: " + request.getRequestURI());
         System.out.println("Header: " + header);
 
@@ -51,7 +50,6 @@ public class JwtFilter extends OncePerRequestFilter {
                     }
                 }
             } catch (Exception e) {
-                // parse/validation error — print for debug
                 System.out.println("JWT parse/validation error: " + e.getMessage());
             }
         }
